@@ -1,122 +1,33 @@
-<%@page import="java.util.ArrayList"%>
-<%@page import="java.util.Iterator"%>
-<%@page import="com.chinookDB.services.TrackFactory"%>
-<%@page import="com.chinookDB.beans.Track"%>
-<%@page import="java.util.List"%>
-<%@page import="com.chinookDB.services.InfoLookupService"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
     
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>    
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="/WEB-INF/chinook-services.tld" prefix="services" %>
 
-<%
-	InfoLookupService infoLookup = InfoLookupService.getInstance();
+<services:queryTracks var="tracks" artist="${param.artist}" genre="${param.genre}" title="${param.title}"/>
+<services:getCustomer/>
+<services:getInvoice/>
 
-	pageContext.setAttribute("genres", infoLookup.lookupGenres());
-	
-	TrackFactory tf = TrackFactory.getInstance();
-	List<Track> tracks = tf.getAllTracks();
-	List<Track> filteredTracks = new ArrayList<Track>();
-	
-	String genre = request.getParameter("genre");
-	String artist = request.getParameter("artist");
-	String title = request.getParameter("title");
-	
-	if(artist != null){
-		if(artist.trim().isEmpty())
-			artist = null;
-		else
-			artist = artist.toLowerCase().replaceAll("\\++", " ");
-	}
-	
-	if(title != null){
-		if(title.trim().isEmpty())
-			title = null;
-		else
-			title = title.toLowerCase().replaceAll("\\++", " ");;
-	}
-	
-	if(genre != null){
-		if(genre.equals("0"))
-			genre = null;
-		else
-			genre = genre.toLowerCase().replaceAll("\\++", " ");;
-	}
-
-	boolean hasSearchParameters = genre != null || artist != null || title != null;
-
-	
-	if(hasSearchParameters){
-		for(Track track : tracks){
-			String trackGenre = track.getGenre().toLowerCase();
-			String trackArtist = track.getArtist().toLowerCase();
-			String trackTitle = track.getTitle().toLowerCase();
-			String album = track.getAlbum().toLowerCase();
-			
-			if( 		(genre == null || trackGenre.equals(genre))
-					&& (artist == null || trackArtist.contains(artist)) 
-					&& (title == null || trackTitle.contains(title) || album.contains(title))){
-				filteredTracks.add(track);
-			}
-		}		
-	}
-
-	pageContext.setAttribute("hasSearchParameters", hasSearchParameters);	
-	pageContext.setAttribute("tracks", filteredTracks);
-	pageContext.setAttribute("selectedGenre", genre);
-	pageContext.setAttribute("selectedTitle", title);
-	pageContext.setAttribute("selectedArtist", artist);
-	
-%>
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="UTF-8"/>
-	<title>Chinook Products Search</title>
-	
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-</head>
+<jsp:include page="./GlobalPageHead.jsp">
+	<jsp:param value="Chinook Products Search" name="pageTitle"/>
+</jsp:include>
 <body>
-	<header>
-		<nav class="navbar navbar-default">
-  			<div class="container-fluid">
-    			<div class="navbar-header">
-      				<a class="navbar-brand" href="#">Chinook Music</a>   				
-   				</div>
-					<form class="navbar-form navbar-left" role="search">
-				  		<div class="form-group">
-				  			<label for="title">Track/Album Title</label>
-				  			<input name="title" id="title" class="form-control" value="${selectedTitle}"/>
-				  			<label for="artist">Artist</label>
-				  			<input name="artist" id="artist" class="form-control" value="${selectedArtist}"/>
-				  			<label for="genre">Genre</label>
-					    	<select name="genre" id="genre" class="form-control">
-					    		<option value="0">--Select Genre--</option>
-					    		<c:forEach items="${genres}" var="genre">
-					    			<c:set var="selected" value="${genre.toLowerCase() == selectedGenre}"/>
-					    			<c:choose>
-					    				<c:when test="${selected}">
-							    			<option value="${genre.toLowerCase()}" selected>${genre}</option>
-					    				</c:when>
-					    				<c:otherwise>
-							    			<option value="${genre.toLowerCase()}">${genre}</option>
-					    				</c:otherwise>
-					    			</c:choose>
-					    		</c:forEach>
-					    	</select>
-					  	</div>
-					  	<button type="submit" class="btn btn-default">Search</button>
-					</form>       				
- 			</div>			
- 		</nav>
-	</header>
-	
+	<jsp:include page="./customer-header.jsp"/>
 	<main>
+		<services:message/>
 		<div class="container">
 			<c:choose>
-				<c:when test="${!hasSearchParameters}">
-					<h1>Please select options for tracks you would like to view.</h1>
+				<c:when test="${empty param}">
+					<c:choose>
+						<c:when test="${sessionScope.login == 'customer'}">
+							<h1>Welcome ${customer.firstName}! Please select options for tracks you would like to view.</h1>
+						</c:when>
+						<c:otherwise>
+							<h1>Currently modifying order for Customer ID: #${customer.id} ${customer.firstName} ${customer.lastName}. Please select options for filtering.</h1>
+						</c:otherwise>
+					</c:choose>
 				</c:when>
 				<c:otherwise>
 					<c:choose>
@@ -124,18 +35,33 @@
 							<h1>We are sorry, no tracks could be found that match your search criteria.</h1>
 						</c:when>
 						<c:otherwise>
+							<h2>Found ${fn:length(tracks)} track(s) that match your search criteria:</h2>
 							<c:forEach items="${tracks}" var="track" varStatus="status">
-								<c:if test="${status.index != 0}">
-									<hr/>
-								</c:if>
+								<hr/>
 								<div class="row">
 									<div class="col-xs-6">
-										<h3>${track.title} <small>${track.artist}</small></h3>
-										<h4>${track.album}</h4>
-										<h4>${track.genre}</h4>
+										<h3 class="track-title">${track.title}</h3>
+										<h4><small><b>Artist:</b>&nbsp;${track.artist}</small></h4>
+										<h4><small><b>Album:</b>&nbsp;${track.album}</small></h4>
+										<h4><small><b>Genre:</b>&nbsp;${track.genre}</small></h4>
 									</div>
 									<div class="col-xs-6">
-										<b>$${track.price}</b>
+										<form action="/chinookDB/CustomerInvoiceManagement.jsp">
+											<div>
+												${invoice.getQuantity(track.id)} in cart
+											</div>
+											<div class="input-group quantity-input">
+												<input type="hidden" name="track" value="${track.id}"/>
+												<input class="form-control" name="quantity" value="1">
+													<span class="input-group-btn">
+														<button class="btn btn-success" name="command" value="add" type="submit">Add</button>
+														<button class="btn btn-danger" name="command" value="remove" type="submit">Remove</button>
+													</span>
+											</div>
+											<div>
+												<b>$${track.price}</b>
+											</div>
+										</form>
 									</div>
 								</div>
 							</c:forEach>							

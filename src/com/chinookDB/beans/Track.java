@@ -1,6 +1,12 @@
 package com.chinookDB.beans;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 public class Track {
+	public Track(){
+		id = -1;
+	}
 	public Track(int id){
 		this.id = id;
 	}
@@ -83,6 +89,27 @@ public class Track {
 	public void setPrice(double price) {
 		this.price = price;
 	}
+	
+	public static Track fromResultSet(ResultSet rs) throws SQLException{
+		int id = rs.getInt("ID");
+		String title = rs.getString("TITLE");
+		String composer = rs.getString("COMPOSER");
+		String artist = rs.getString("ARTIST");
+		String genre = rs.getString("GENRE");
+		String album = rs.getString("ALBUM");
+		double price = rs.getDouble("PRICE");
+		
+		Track track = new Track(id);
+		track.setTitle(title);
+		track.setComposer(composer);
+		track.setArtist(artist);
+		track.setAlbum(album);
+		track.setGenre(genre);
+		track.setPrice(price);
+		
+		return track;		
+	}
+	
 	int id;
 	String title;
 	String album;
