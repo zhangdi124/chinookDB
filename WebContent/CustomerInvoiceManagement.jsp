@@ -18,5 +18,8 @@
 		}
 	}
 
-	response.sendRedirect("/chinookDB/product-search.jsp");
+	if(session.getAttribute("login").equals("employee"))
+		response.sendRedirect("/chinookDB/shopping-cart.jsp");
+	else
+		response.sendRedirect("/chinookDB/product-search.jsp");
 %>

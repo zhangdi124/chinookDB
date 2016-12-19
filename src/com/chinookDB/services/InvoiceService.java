@@ -1,6 +1,7 @@
 package com.chinookDB.services;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -46,7 +47,7 @@ public class InvoiceService {
 	}
 	
 	private boolean invoiceLineExists(int customerId, int trackId){
-		String sql = "SELECT count(*) from invoiceline where TrackId = ? and invoiceId = (select invoiceId from invoice where customerId = ? ORDER BY invoicedate desc LIMIT 1);";
+		String sql = "SELECT count(*) from invoiceline where TrackId = ? and invoiceId = (select invoiceId from invoice where customerId = ? ORDER BY invoicedate desc LIMIT 1) and QUANTITY > 0;";
 		
 		ApplicationDAO dao = ApplicationDAO.getInstance();
 		
@@ -151,6 +152,46 @@ public class InvoiceService {
 		}				
 	}
 	
+	//TODO - Some kind of eCommerce logic...
+	//for this POC just start a new blank invoice
+	public void submitInvoice(int customerId){
+		ApplicationDAO dao = ApplicationDAO.getInstance();
+		
+		Connection connection = null;
+		ResultSet rs = null;
+		
+		try{
+			connection = dao.getConnection();
+			String sql = "SELECT InvoiceId FROM invoice ORDER BY InvoiceId DESC LIMIT 1";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			
+			rs = statement.executeQuery();
+			int invoiceId = 0;
+			if(rs.next())
+				invoiceId = rs.getInt(1) + 1;
+			
+			sql = "INSERT into invoice (InvoiceID, customerId, InvoiceDate, Total) VALUES (?, ?, ?, ?)";
+			statement = connection.prepareStatement(sql);
+
+			statement.setInt(1, invoiceId);
+			statement.setInt(2, customerId);
+			statement.setDate(3, new Date(new java.util.Date().getTime()));
+			statement.setDouble(4, 0D);
+			
+			statement.execute();
+			
+		}catch(SQLException e){
+			e.printStackTrace();
+		}finally{
+			if(rs != null){
+				try{
+					rs.close();
+				}catch(SQLException e){}
+			}
+			dao.closeConnection(connection);
+		}					
+	}
+	
 	public Invoice getInvoice(int customerId){
 		ApplicationDAO dao = ApplicationDAO.getInstance();
 		
@@ -159,7 +200,7 @@ public class InvoiceService {
 
 		try{
 			connection = dao.getConnection();
-			String sql = String.format("SELECT * FROM `invoiceline` WHERE invoiceid = (select invoiceid from invoice where customerid = %d order by invoicedate desc limit 1);", customerId);
+			String sql = String.format("SELECT * FROM `invoiceline` WHERE invoiceid = (select invoiceid from invoice where customerid = %d order by invoicedate desc limit 1) AND quantity > 0;", customerId);
 			PreparedStatement statement = connection.prepareStatement(sql);
 
 			rs = statement.executeQuery();

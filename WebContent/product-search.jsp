@@ -48,7 +48,7 @@
 									<div class="col-xs-6">
 										<form action="/chinookDB/CustomerInvoiceManagement.jsp">
 											<div>
-												${invoice.getQuantity(track.id)} in cart
+												${invoice.getQuantity(track)} in cart
 											</div>
 											<div class="input-group quantity-input">
 												<input type="hidden" name="track" value="${track.id}"/>

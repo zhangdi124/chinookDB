@@ -178,4 +178,51 @@ public class TrackService {
 		
 		return Collections.emptyList();
 	}
+	
+	public Track findTrackById(int id){
+		ApplicationDAO dao = ApplicationDAO.getInstance();
+		
+		Connection connection = null;
+		ResultSet rs = null;
+		
+		String sql =
+				"select " +
+					"t.TrackId as \"ID\", "+
+				    "t.Name as \"TITLE\", "+
+				    "album.Title as \"ALBUM\", "+
+				    "t.Composer as \"COMPOSER\", "+
+				    "artist.Name as \"ARTIST\", "+
+				    "g.Name as \"GENRE\", "+
+				    "t.UnitPrice as \"PRICE\" "+
+				"from track t, genre g, album, artist "+
+				"where t.TrackId = ? AND "+
+				"t.GenreId = g.GenreId "+
+				"and t.AlbumId = album.AlbumId "+
+				"and album.ArtistId = artist.ArtistId LIMIT 1";
+
+		
+		try{
+			connection = dao.getConnection();
+			
+			PreparedStatement statement = connection.prepareStatement(sql);
+
+			statement.setInt(1, id);
+			rs = statement.executeQuery();
+			
+			if(rs.next())
+				return Track.fromResultSet(rs);
+
+		}catch(SQLException e){
+			e.printStackTrace();
+		}finally{
+			if(rs != null){
+				try{
+					rs.close();
+				}catch(SQLException e){}
+			}
+			dao.closeConnection(connection);
+		}
+		
+		return null;		
+	}
 }

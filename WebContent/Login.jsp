@@ -20,7 +20,11 @@
 		if(login.equals("customer") || login.equals("employee")){
 			int customerId = Integer.parseInt(request.getParameter("customerId"));
 			session.setAttribute("customerId", customerId);
-			response.sendRedirect("/chinookDB/product-search.jsp");
+			
+			if(login.equals("customer"))
+				response.sendRedirect("/chinookDB/product-search.jsp");
+			else
+				response.sendRedirect("/chinookDB/shopping-cart.jsp");
 		}else if(login.equals("admin")){
 			response.sendRedirect("/chinookDB/admin.jsp");
 		}

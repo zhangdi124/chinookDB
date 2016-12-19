@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.chinookDB.beans.Track;
+
 public class Invoice {
 	public Invoice(int id){
 		this.id = id;
@@ -122,11 +124,12 @@ public class Invoice {
 		this.invoiceLines.addAll(invoiceLines);
 	}
 	
-	public int getQuantity(int trackId){
+	public int getQuantity(Track track){
+		int trackId = track.getId();
 		int q = 0;
 		
 		for(InvoiceLine line : invoiceLines){
-			if(line.getTrackId() == trackId)
+			if(line.getTrack().getId() == trackId)
 				q += line.getQuantity();
 		}
 		
@@ -145,6 +148,15 @@ public class Invoice {
 		
 		return invoice;
 	}
+	
+	public double getTotalPrice(){
+		double sum = 0D;
+		for(InvoiceLine line : invoiceLines){
+			sum += line.getUnitPrice() * line.getQuantity();
+		}
+		return sum;
+	}
+	
 	private int id;
 	private int customerId;
 	private Date invoiceDate;

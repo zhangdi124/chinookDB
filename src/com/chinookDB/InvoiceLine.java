@@ -3,7 +3,22 @@ package com.chinookDB;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.chinookDB.beans.Track;
+import com.chinookDB.services.TrackService;
+
 public class InvoiceLine {
+	/**
+	 * @return the track
+	 */
+	public Track getTrack() {
+		return track;
+	}
+	/**
+	 * @param track the track to set
+	 */
+	public void setTrack(Track track) {
+		this.track = track;
+	}
 	public InvoiceLine(int id){
 		this.id = id;
 	}
@@ -26,20 +41,6 @@ public class InvoiceLine {
 	 */
 	public void setInvoiceId(int invoiceId) {
 		this.invoiceId = invoiceId;
-	}
-
-	/**
-	 * @return the trackId
-	 */
-	public int getTrackId() {
-		return trackId;
-	}
-
-	/**
-	 * @param trackId the trackId to set
-	 */
-	public void setTrackId(int trackId) {
-		this.trackId = trackId;
 	}
 
 	/**
@@ -72,18 +73,22 @@ public class InvoiceLine {
 	
 	
 	public static InvoiceLine fromResultSet(ResultSet rs) throws SQLException{
+		TrackService service = TrackService.getInstance();
+		
 		InvoiceLine line = new InvoiceLine(rs.getInt("InvoiceLineId"));
 		line.setInvoiceId(rs.getInt("InvoiceId"));
-		line.setTrackId(rs.getInt("TrackId"));
 		line.setUnitPrice(rs.getDouble("UnitPrice"));
 		line.setQuantity(rs.getInt("Quantity"));
+		
+		Track track = service.findTrackById(rs.getInt("TrackId"));
+		line.setTrack(track);
 		
 		return line;
 	}
 
 	private int id;
 	private int invoiceId;
-	private int trackId;
+	private Track track;
 	
 	private double unitPrice;
 	

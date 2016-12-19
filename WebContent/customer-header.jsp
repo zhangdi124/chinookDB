@@ -24,7 +24,7 @@
    			<div class="navbar-header">
      				<a class="navbar-brand" href="#">Chinook Music</a>   				
   				</div>
-				<form id="searchForm" class="navbar-form navbar-left" role="search">
+				<form id="searchForm" class="navbar-form navbar-left" action="/chinookDB/product-search.jsp" role="search">
 			  		<div class="form-group">
 			  			<label for="title">Track/Album Title</label>
 			  			<input name="title" id="title" class="form-control" value="${param.title}"/>
@@ -59,7 +59,17 @@
 			</div>		
  			<div class="container-fluid">
    			<div class="navbar-header">
-     				<b>Logged in: ${customer.firstName} ${customer.lastName}</b>  
+   					<c:set var="loginPrompt">
+	   					<c:choose>
+							<c:when test="${sessionScope.login == 'customer'}">
+								Logged In:
+							</c:when>
+							<c:otherwise>
+								Modifying Orders For:
+							</c:otherwise>
+						</c:choose>
+					</c:set>
+     				<b>${loginPrompt} ${customer.firstName} ${customer.lastName}</b>  
      				<a class="btn btn-danger btn-sm" href="/chinookDB/Logout.jsp">Logout</a>			
   				</div>
 		</div> 				
